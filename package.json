@@ -1,0 +1,16 @@
+{
+  "name": "SVG to React",
+  "version": "1.0.0",
+  "description": "SVG to React filewatcher",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Vasily Tokarev",
+  "license": "ISC",
+  "dependencies": {
+    "chokidar": "^2.0.2",
+    "xml2js": "^0.4.19"
+  }
+}
