@@ -70,13 +70,13 @@ const group = (node) => {
 };
 
 const text = (node) => {
-  let data = `<text x='${node.$.x}' y='${node.$.y}'`;
+  let data = `<text\nx="${node.$.x}"\ny="${node.$.y}"`;
   if (node.$.style) {
-    data += ' style={{\n';
+    data += '\nstyle={{\n';
     data += transformedStyles(node.$.style.split(';'));
-    data += '}}';
+    data += '}}\n';
   }
-  data += `>${node._}</text>`;
+  data += `>\n${node._}\n</text>`;
   return data;
 };
 
