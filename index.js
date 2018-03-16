@@ -17,15 +17,18 @@ const transformedProp = (prop) => {
     let name = splitted[i];
     if (name) {
       const hyphen = name.match('-');
-      const value = splitted[i + 1];
+      let value = splitted[i + 1];
       const matchedQuotes = value.match(/'(.*)'/);
       if (hyphen) {
         lowercaseIndex = hyphen.index + 1;
         lowercase = name[lowercaseIndex];
         name = replaceAt(name, lowercase.toUpperCase(), lowercaseIndex).replace('-', '');
       }
-      data += `${name}: '${matchedQuotes ? matchedQuotes[1] : value
-        }'\n`;
+
+      // Inherit color from CSS.
+      if (name === 'fill' || name === 'stroke') value = 'currentColor'
+
+      data += `${name}: '${matchedQuotes ? matchedQuotes[1] : value}'\n`;
     }
     return data;
   }
