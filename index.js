@@ -26,21 +26,35 @@ const transformedProp = (prop) => {
       }
 
       // Inherit color from CSS.
-      if (name === 'fill' || name === 'stroke') value = 'currentColor'
-
-      data += `${name}: '${matchedQuotes ? matchedQuotes[1] : value}'\n`;
+      if (name === 'fill' || name === 'stroke') {
+        if (value != 'none') value = 'currentColor';
+      }
+      data += `${name}: '${matchedQuotes ? matchedQuotes[1] : value}'`;
     }
     return data;
   }
 };
+
+const withoutCommas = (str) => str.replace(',', '');
+const I = (identity) => identity;
+
 const path = (node) => {
   let data = '';
   data += `<path \nd="${node.$.d}"`;
   if (node.$.style) {
     data += '\n style={{\n';
-    data += node.$.style.split(';').map(transformedProp);
+    data += transformedStyles(node.$.style.split(';'));
     data += '}}\n/>';
   }
+  return data;
+};
+
+const transformedStyles = (node) => {
+  let data = '';
+  node.filter(I)
+    .map(withoutCommas)
+    .map(transformedProp)
+    .forEach((style) => data += `${style},\n`);
   return data;
 };
 
@@ -48,7 +62,9 @@ const group = (node) => {
   let data = `\n<g`;
   node.$ && node.$.transform ? data += ` transform="${node.$.transform}">` : data += '>';
   if (node.path) {
-    data += node.path.map(path);
+    node.path.map(path).forEach((res) => {
+      data += `${res}\n`
+    });
   }
   return data += `\n</g>`;
 };
@@ -57,7 +73,7 @@ const text = (node) => {
   let data = `<text x='${node.$.x}' y='${node.$.y}'`;
   if (node.$.style) {
     data += ' style={{\n';
-    data += node.$.style.split(';').map(transformedProp);
+    data += transformedStyles(node.$.style.split(';'));
     data += '}}';
   }
   data += `>${node._}</text>`;

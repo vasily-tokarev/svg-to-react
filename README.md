@@ -14,5 +14,5 @@ fs.writeFileSync('/Users/vt/Desktop/Representer/app/containers/Header/TestIcon.j
 4. Import the icon in your React project.  
 
 SVG size is set to match 1em (16px) by default. E.g. 32x32 document will output 2em SVG.
-
+Fill and stroke colors are changed to `currentColor` during the process to allow CSS styling.
 
