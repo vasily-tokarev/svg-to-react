@@ -10,41 +10,56 @@ const replaceAt = (str, char, index) => {
   return a.join('');
 };
 
-const parsePath = (node) => {
-  let path = '';
-  path += `<path \nd="${node.$.d}"`;
-  if (node.$.style) {
-    path += '\n style={{\n';
-    node.$.style.split(';').forEach((prop) => {
-      const splitted = prop.split(':');
-      for (i = 0; i < splitted.length; i += 2) {
-        let val = splitted[i];
-        if (val) {
-          const hyphen = val.match('-');
-          if (hyphen) {
-            lowercaseIndex = hyphen.index + 1;
-            lowercase = val[lowercaseIndex];
-            val = replaceAt(val, lowercase.toUpperCase(), lowercaseIndex).replace('-', '');
-          }
-          path += `${val}: '${splitted[i + 1]}',\n`;
-        }
+const transformedProp = (prop) => {
+  let data = '';
+  const splitted = prop.split(':');
+  for (i = 0; i < splitted.length; i += 2) {
+    let name = splitted[i];
+    if (name) {
+      const hyphen = name.match('-');
+      const value = splitted[i + 1];
+      const matchedQuotes = value.match(/'(.*)'/);
+      if (hyphen) {
+        lowercaseIndex = hyphen.index + 1;
+        lowercase = name[lowercaseIndex];
+        name = replaceAt(name, lowercase.toUpperCase(), lowercaseIndex).replace('-', '');
       }
-      ;
-    });
-    path += '}}\n/>';
+      data += `${name}: '${matchedQuotes ? matchedQuotes[1] : value
+        }'\n`;
+    }
+    return data;
   }
-  return path;
+};
+const path = (node) => {
+  let data = '';
+  data += `<path \nd="${node.$.d}"`;
+  if (node.$.style) {
+    data += '\n style={{\n';
+    data += node.$.style.split(';').map(transformedProp);
+    data += '}}\n/>';
+  }
+  return data;
 };
 
-const parseGroup = (node) => {
-    let group = `\n<g`;
-    node.$ && node.$.transform ? group += ` transform="${node.$.transform}">` : group += '>';
-    if (node.path) {
-      group += node.path.map(parsePath);
-    }
-    group += `\n</g>`;
-    return group;
-}
+const group = (node) => {
+  let data = `\n<g`;
+  node.$ && node.$.transform ? data += ` transform="${node.$.transform}">` : data += '>';
+  if (node.path) {
+    data += node.path.map(path);
+  }
+  return data += `\n</g>`;
+};
+
+const text = (node) => {
+  let data = `<text x='${node.$.x}' y='${node.$.y}'`;
+  if (node.$.style) {
+    data += ' style={{\n';
+    data += node.$.style.split(';').map(transformedProp);
+    data += '}}';
+  }
+  data += `>${node._}</text>`;
+  return data;
+};
 
 const processSvg = (file) => {
   let output = '';
@@ -56,11 +71,15 @@ const processSvg = (file) => {
     const height = xml.svg.$.height.replace('px', '');
     output += `<svg height="${height / 16}em" width="${height / 16}em" viewBox="0 0 ${width} ${height}"> \n`;
 
+    if (xml.svg.text) {
+      output += xml.svg.text.map(text);
+    }
+
     if (xml.svg.g) {
-      output += xml.svg.g.map(parseGroup)
+      output += xml.svg.g.map(group);
     } else {
       if (xml.svg.path) {
-        output += xml.svg.path.map(parsePath);
+        output += xml.svg.path.map(path);
       }
     }
     output += '\n</svg>';
@@ -75,8 +94,8 @@ const pbcopy = (data) => {
   proc.stdin.write(data);
   proc.stdin.end();
 };
-// processSvg('test-icon.svg'); // Test single file.
+// processSvg('question.svg'); // Test single file.
 
-chokidar.watch('.', { ignored: '.DS_Store' })
+chokidar.watch('*.svg')
   .on('add', path => processSvg(path))
   .on('change', path => processSvg(path));
