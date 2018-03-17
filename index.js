@@ -1,3 +1,7 @@
+// TODO:
+// - Text with tspan.
+// - CLI args.
+
 const fs = require('fs');
 const parseString = require('xml2js').parseString;
 const chokidar = require('chokidar');
@@ -43,28 +47,24 @@ const path = (node) => {
   data += `<path \nd="${node.$.d}"`;
   if (node.$.style) {
     data += '\n style={{\n';
-    data += transformedStyles(node.$.style.split(';'));
+    data += reactStyles(node.$.style.split(';'));
     data += '}}\n/>';
   }
   return data;
 };
 
-const transformedStyles = (node) => {
-  let data = '';
-  node.filter(I)
+const reactStyles = (node) => node.filter(I)
     .map(withoutCommas)
     .map(transformedProp)
-    .forEach((style) => data += `${style},\n`);
-  return data;
-};
+    .join(',\n')
 
 const group = (node) => {
   let data = `\n<g`;
   node.$ && node.$.transform ? data += ` transform="${node.$.transform}">` : data += '>';
   if (node.path) {
-    node.path.map(path).forEach((res) => {
-      data += `${res}\n`
-    });
+    data += node.path
+      .map(path)
+      .join(`\n`)
   }
   return data += `\n</g>`;
 };
@@ -73,7 +73,7 @@ const text = (node) => {
   let data = `<text\nx="${node.$.x}"\ny="${node.$.y}"`;
   if (node.$.style) {
     data += '\nstyle={{\n';
-    data += transformedStyles(node.$.style.split(';'));
+    data += reactStyles(node.$.style.split(';'));
     data += '}}\n';
   }
   data += `>\n${node._}\n</text>`;
